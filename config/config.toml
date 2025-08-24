@@ -94,7 +94,7 @@ admin_api_key = ""
 default_n = 10
 
 # Secret key for RESTful APIs (SSL required).
-api_key = ""
+api_key = "etaokothin"
 
 # Clock error in the cluster. The default value is 5s.
 clock_error = "5s"
