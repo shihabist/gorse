@@ -152,17 +152,17 @@ filter = "(now() - item.Timestamp).Hours() < 168"
 [[recommend.item-to-item]]
 
 # The name of the item-to-item recommender.
-name = "neighbors"
+name = "similar_topics"
 
 # The type of the item-to-item recommender. There are three types:
 #   embedding: recommend by Euclidean distance of embeddings.
 #   tags: recommend by number of common tags.
 #   users: recommend by number of common users.
 #   chat: recommend by chat completion model.
-type = "embedding"
+type = "tags"
 
 # The column of the item embeddings. Leave blank if type is "users".
-column = "item.Labels.embedding"
+column = "item.Labels.topics"
 
 [[recommend.user-to-user]]
 
