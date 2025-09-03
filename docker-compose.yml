@@ -149,7 +149,7 @@ services:
       --cache-path /var/lib/gorse/worker_cache.data
     volumes:
       - gorse_log:/var/log/gorse
-      - worker1_data:/var/lib/gorse
+      - worker5_data:/var/lib/gorse
     depends_on:
       - master
 
@@ -166,7 +166,7 @@ services:
       --cache-path /var/lib/gorse/worker_cache.data
     volumes:
       - gorse_log:/var/log/gorse
-      - worker2_data:/var/lib/gorse
+      - worker6_data:/var/lib/gorse
     depends_on:
       - master
 
@@ -183,7 +183,7 @@ services:
       --cache-path /var/lib/gorse/worker_cache.data
     volumes:
       - gorse_log:/var/log/gorse
-      - worker3_data:/var/lib/gorse
+      - worker7_data:/var/lib/gorse
     depends_on:
       - master
 
@@ -200,7 +200,7 @@ services:
       --cache-path /var/lib/gorse/worker_cache.data
     volumes:
       - gorse_log:/var/log/gorse
-      - worker4_data:/var/lib/gorse
+      - worker8_data:/var/lib/gorse
     depends_on:
       - master
 
