@@ -68,39 +68,39 @@ services:
     depends_on:
       - master
 
-  worker1:
-    image: zhenghaoz/gorse-worker
-    container_name: gorse_worker1
-    restart: unless-stopped
-    ports:
-      - 8090:8089 # map to different host port
-    command: >
-      --master-host master --master-port 8086
-      --http-host 0.0.0.0 --http-port 8089
-      --log-path /var/log/gorse/worker.log
-      --cache-path /var/lib/gorse/worker_cache.data
-    volumes:
-      - gorse_log:/var/log/gorse
-      - worker1_data:/var/lib/gorse
-    depends_on:
-      - master
+  # worker1:
+  #   image: zhenghaoz/gorse-worker
+  #   container_name: gorse_worker1
+  #   restart: unless-stopped
+  #   ports:
+  #     - 8090:8089 # map to different host port
+  #   command: >
+  #     --master-host master --master-port 8086
+  #     --http-host 0.0.0.0 --http-port 8089
+  #     --log-path /var/log/gorse/worker.log
+  #     --cache-path /var/lib/gorse/worker_cache.data
+  #   volumes:
+  #     - gorse_log:/var/log/gorse
+  #     - worker1_data:/var/lib/gorse
+  #   depends_on:
+  #     - master
 
-  worker2:
-    image: zhenghaoz/gorse-worker
-    container_name: gorse_worker2
-    restart: unless-stopped
-    ports:
-      - 8091:8089 # map to another free host port
-    command: >
-      --master-host master --master-port 8086
-      --http-host 0.0.0.0 --http-port 8089
-      --log-path /var/log/gorse/worker.log
-      --cache-path /var/lib/gorse/worker_cache.data
-    volumes:
-      - gorse_log:/var/log/gorse
-      - worker2_data:/var/lib/gorse
-    depends_on:
-      - master
+  # worker2:
+  #   image: zhenghaoz/gorse-worker
+  #   container_name: gorse_worker2
+  #   restart: unless-stopped
+  #   ports:
+  #     - 8091:8089 # map to another free host port
+  #   command: >
+  #     --master-host master --master-port 8086
+  #     --http-host 0.0.0.0 --http-port 8089
+  #     --log-path /var/log/gorse/worker.log
+  #     --cache-path /var/lib/gorse/worker_cache.data
+  #   volumes:
+  #     - gorse_log:/var/log/gorse
+  #     - worker2_data:/var/lib/gorse
+  #   depends_on:
+  #     - master
 
   # worker3:
   #   image: zhenghaoz/gorse-worker
@@ -248,8 +248,8 @@ services:
 
 volumes:
   worker_data:
-  worker1_data:
-  worker2_data:
+  # worker1_data:
+  # worker2_data:
   # worker3_data:
   # worker4_data:
   # worker5_data:
