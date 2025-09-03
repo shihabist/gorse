@@ -248,6 +248,14 @@ services:
 
 volumes:
   worker_data:
+  worker1_data:
+  worker2_data:
+  worker3_data:
+  worker4_data:
+  worker5_data:
+  worker6_data:
+  worker7_data:
+  worker8_data:
   server_data:
   master_data:
   gorse_log:
