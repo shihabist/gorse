@@ -11,7 +11,8 @@
 #   mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   mongodb+srv://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   sqlite://<path>
-cache_store = "redis://localhost:6379/0"
+cache_store = "mongodb://nusra_team:etakothinpass_yo@103.163.72.24:27017/gorse?authSource=admin"
+# cache_store = "redis://localhost:6379/0"
 
 # The database for persist data, support MySQL, Postgres, ClickHouse and MongoDB:
 #   mysql://[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
@@ -23,7 +24,7 @@ cache_store = "redis://localhost:6379/0"
 #   mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   mongodb+srv://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   sqlite://<path>
-data_store = "mysql://gorse:gorse_pass@tcp(localhost:3306)/gorse"
+data_store = "mongodb://nusra_team:etakothinpass_yo@103.163.72.24:27017/gorse?authSource=admin"
 
 # The naming prefix for tables (collections, keys) in databases. The default value is empty.
 table_prefix = ""
