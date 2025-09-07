@@ -21,7 +21,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -156,13 +155,9 @@ func NewMaster(cfg *config.Config, cacheFolder string) *Master {
 		),
 		RestServer: server.RestServer{
 			Settings: &config.Settings{
-				Config:                        cfg,
-				CacheClient:                   cache.NoDatabase{},
-				DataClient:                    data.NoDatabase{},
-				CollaborativeFilteringModel:   cf.NewBPR(nil),
-				ClickModel:                    ctr.NewFMV2(nil),
-				CollaborativeFilteringModelId: 0,
-				ClickThroughRateModelId:       0,
+				Config:      cfg,
+				CacheClient: cache.NoDatabase{},
+				DataClient:  data.NoDatabase{},
 			},
 			HttpHost:   cfg.Master.HttpHost,
 			HttpPort:   cfg.Master.HttpPort,
@@ -227,30 +222,13 @@ func (m *Master) Serve() {
 		log.Logger().Fatal("failed to init database", zap.Error(err))
 	}
 
-	// load collective filtering model
+	// load collective filtering model meta
 	metaStr, err := m.metaStore.Get(meta.COLLABORATIVE_FILTERING_MODEL)
 	if err != nil && !errors.Is(err, errors.NotFound) {
 		log.Logger().Error("failed to load collaborative filtering meta", zap.Error(err))
 	} else if metaStr != nil {
-		var metaData meta.Model[cf.Score]
-		if err = metaData.FromJSON(*metaStr); err != nil {
+		if err = m.collaborativeFilteringMeta.FromJSON(*metaStr); err != nil {
 			log.Logger().Error("failed to unmarshal collaborative filtering meta", zap.Error(err))
-		} else {
-			r, err := m.blobStore.Open(strconv.FormatInt(metaData.ID, 10))
-			if err != nil {
-				log.Logger().Error("failed to open collaborative filtering model", zap.Error(err))
-			} else {
-				if model, err := cf.UnmarshalModel(r); err != nil {
-					log.Logger().Error("failed to unmarshal collaborative filtering model", zap.Error(err))
-				} else {
-					m.collaborativeFilteringModelMutex.Lock()
-					m.CollaborativeFilteringModel = model
-					m.collaborativeFilteringMeta = metaData
-					m.collaborativeFilteringModelMutex.Unlock()
-					log.Logger().Info("loaded collaborative filtering model",
-						zap.Int64("id", metaData.ID))
-				}
-			}
 		}
 	}
 
@@ -259,25 +237,8 @@ func (m *Master) Serve() {
 	if err != nil && !errors.Is(err, errors.NotFound) {
 		log.Logger().Error("failed to load click-through rate meta", zap.Error(err))
 	} else if metaStr != nil {
-		var metaData meta.Model[ctr.Score]
-		if err = metaData.FromJSON(*metaStr); err != nil {
+		if err = m.clickThroughRateMeta.FromJSON(*metaStr); err != nil {
 			log.Logger().Error("failed to unmarshal click-through rate meta", zap.Error(err))
-		} else {
-			r, err := m.blobStore.Open(strconv.FormatInt(metaData.ID, 10))
-			if err != nil {
-				log.Logger().Error("failed to open click-through rate model", zap.Error(err))
-			} else {
-				if model, err := ctr.UnmarshalModel(r); err != nil {
-					log.Logger().Error("failed to unmarshal click-through rate model", zap.Error(err))
-				} else {
-					m.clickThroughRateModelMutex.Lock()
-					m.ClickModel = model
-					m.clickThroughRateMeta = metaData
-					m.clickThroughRateModelMutex.Unlock()
-					log.Logger().Info("loaded click-through rate model",
-						zap.Int64("id", metaData.ID))
-				}
-			}
 		}
 	}
 

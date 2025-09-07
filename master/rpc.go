@@ -44,17 +44,11 @@ func (m *Master) GetMeta(ctx context.Context, nodeInfo *protocol.NodeInfo) (*pro
 	}
 	// save ranking model version
 	m.collaborativeFilteringModelMutex.RLock()
-	var collaborativeFilteringModelId int64
-	if m.CollaborativeFilteringModel != nil && !m.CollaborativeFilteringModel.Invalid() {
-		collaborativeFilteringModelId = m.collaborativeFilteringMeta.ID
-	}
+	collaborativeFilteringModelId := m.collaborativeFilteringMeta.ID
 	m.collaborativeFilteringModelMutex.RUnlock()
 	// save click model version
 	m.clickThroughRateModelMutex.RLock()
-	var clickThroughRateModelId int64
-	if m.ClickModel != nil && !m.ClickModel.Invalid() {
-		clickThroughRateModelId = m.clickThroughRateMeta.ID
-	}
+	clickThroughRateModelId := m.clickThroughRateMeta.ID
 	m.clickThroughRateModelMutex.RUnlock()
 	// collect nodes
 	workers := make([]string, 0)

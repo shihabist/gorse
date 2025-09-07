@@ -778,7 +778,7 @@ func (m *Master) getRecommend(request *restful.Request, response *restful.Respon
 	// parse arguments
 	recommender := request.PathParameter("recommender")
 	userId := request.PathParameter("user-id")
-	categories := server.ReadCategories(request, []string{""})
+	categories := server.ReadCategories(request, nil)
 	n, err := server.ParseInt(request, "n", m.Config.Server.DefaultN)
 	if err != nil {
 		server.BadRequest(response, err)
@@ -834,13 +834,13 @@ func (m *Master) getRecommend(request *restful.Request, response *restful.Respon
 	}
 
 	// Send result
-	details := make([]data.Item, len(results))
+	details := make([]data.Item, 0, len(results))
 	for i := range results {
-		var exist bool
-		details[i], exist = itemsMap[results[i]]
-		if !exist {
-			server.InternalServerError(response, fmt.Errorf("item `%s` not found", results[i]))
-			return
+		detail, exist := itemsMap[results[i]]
+		if exist {
+			details = append(details, detail)
+		} else {
+			log.Logger().Warn("recommended item doesn't exist", zap.String("item_id", results[i]))
 		}
 	}
 	server.Ok(response, details)

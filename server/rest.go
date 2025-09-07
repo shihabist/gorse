@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -30,9 +29,9 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/google/uuid"
-	"github.com/gorse-io/gorse/base/heap"
 	"github.com/gorse-io/gorse/base/log"
 	"github.com/gorse-io/gorse/common/expression"
+	"github.com/gorse-io/gorse/common/heap"
 	"github.com/gorse-io/gorse/config"
 	"github.com/gorse-io/gorse/storage/cache"
 	"github.com/gorse-io/gorse/storage/data"
@@ -412,7 +411,7 @@ func (s *RestServer) CreateWebService() {
 		Writes([]data.Feedback{}))
 
 	// Get collaborative filtering recommendation by user id
-	ws.Route(ws.GET("/intermediate/recommend/{user-id}").To(s.getCollaborative).
+	ws.Route(ws.GET("/collaborative-filtering/{user-id}").To(s.getCollaborativeFiltering).
 		Doc("Get the collaborative filtering recommendation for a user").
 		Metadata(restfulspec.KeyOpenAPITags, []string{DetractedAPITag}).
 		Param(ws.HeaderParameter("X-API-Key", "API key").DataType("string")).
@@ -421,7 +420,7 @@ func (s *RestServer) CreateWebService() {
 		Param(ws.QueryParameter("offset", "Offset of returned items").DataType("integer")).
 		Returns(http.StatusOK, "OK", []cache.Score{}).
 		Writes([]cache.Score{}))
-	ws.Route(ws.GET("/intermediate/recommend/{user-id}/{category}").To(s.getCollaborative).
+	ws.Route(ws.GET("/collaborative-filtering/{user-id}/{category}").To(s.getCollaborativeFiltering).
 		Doc("Get the collaborative filtering recommendation for a user").
 		Metadata(restfulspec.KeyOpenAPITags, []string{DetractedAPITag}).
 		Param(ws.HeaderParameter("X-API-Key", "API key").DataType("string")).
@@ -787,8 +786,8 @@ func (s *RestServer) getUserNeighbors(request *restful.Request, response *restfu
 	}
 }
 
-// getCollaborative gets cached recommended items from database.
-func (s *RestServer) getCollaborative(request *restful.Request, response *restful.Response) {
+// getCollaborativeFiltering gets cached recommended items from database.
+func (s *RestServer) getCollaborativeFiltering(request *restful.Request, response *restful.Response) {
 	// Get user id
 	userId := request.PathParameter("user-id")
 	categories := ReadCategories(request, nil)
@@ -939,7 +938,7 @@ func (s *RestServer) RecommendUserBased(ctx *recommendContext) error {
 		start := time.Now()
 		candidates := make(map[string]float64)
 		// load similar users
-		similarUsers, err := s.CacheClient.SearchScores(ctx.context, cache.UserToUser, cache.Key(name, ctx.userId), []string{""}, 0, s.Config.Recommend.CacheSize)
+		similarUsers, err := s.CacheClient.SearchScores(ctx.context, cache.UserToUser, cache.Key(name, ctx.userId), nil, 0, s.Config.Recommend.CacheSize)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -952,13 +951,7 @@ func (s *RestServer) RecommendUserBased(ctx *recommendContext) error {
 			// add unseen items
 			for _, feedback := range feedbacks {
 				if !ctx.excludeSet.Contains(feedback.ItemId) {
-					item, err := s.DataClient.GetItem(ctx.context, feedback.ItemId)
-					if err != nil {
-						return errors.Trace(err)
-					}
-					if reflect.DeepEqual(ctx.categories, []string{""}) || lo.Every(item.Categories, ctx.categories) {
-						candidates[feedback.ItemId] += user.Score
-					}
+					candidates[feedback.ItemId] += user.Score
 				}
 			}
 		}
@@ -969,8 +962,25 @@ func (s *RestServer) RecommendUserBased(ctx *recommendContext) error {
 			filter.Push(id, score)
 		}
 		ids, _ := filter.PopAll()
-		ctx.results = append(ctx.results, ids...)
-		ctx.excludeSet.Append(ids...)
+		var results []string
+		for i := 0; i < len(ids) && len(results)+len(ctx.results) < ctx.n; i += 100 {
+			items, err := s.DataClient.BatchGetItems(ctx.context, ids[i:min(i+100, len(ids))])
+			if err != nil {
+				return errors.Trace(err)
+			}
+			itemsMap := make(map[string]data.Item)
+			for _, item := range items {
+				itemsMap[item.ItemId] = item
+			}
+			for _, id := range ids[i:min(i+100, len(ids))] {
+				item, exists := itemsMap[id]
+				if exists && lo.Every(item.Categories, ctx.categories) {
+					results = append(results, id)
+				}
+			}
+		}
+		ctx.results = append(ctx.results, results...)
+		ctx.excludeSet.Append(results...)
 		ctx.userBasedTime = time.Since(start)
 		ctx.numFromUserBased = len(ctx.results) - ctx.numPrevStage
 		ctx.numPrevStage = len(ctx.results)
@@ -1029,8 +1039,14 @@ func (s *RestServer) RecommendItemBased(ctx *recommendContext) error {
 
 func (s *RestServer) RecommendLatest(ctx *recommendContext) error {
 	if len(ctx.results) < ctx.n {
+		var categories []string
+		if len(ctx.categories) == 0 {
+			categories = []string{""}
+		} else {
+			categories = ctx.categories
+		}
 		start := time.Now()
-		items, err := s.CacheClient.SearchScores(ctx.context, cache.NonPersonalized, cache.Latest, ctx.categories, 0, s.Config.Recommend.CacheSize)
+		items, err := s.CacheClient.SearchScores(ctx.context, cache.NonPersonalized, cache.Latest, categories, 0, s.Config.Recommend.CacheSize)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -1049,8 +1065,14 @@ func (s *RestServer) RecommendLatest(ctx *recommendContext) error {
 
 func (s *RestServer) RecommendPopular(ctx *recommendContext) error {
 	if len(ctx.results) < ctx.n {
+		var categories []string
+		if len(ctx.categories) == 0 {
+			categories = []string{""}
+		} else {
+			categories = ctx.categories
+		}
 		start := time.Now()
-		items, err := s.CacheClient.SearchScores(ctx.context, cache.NonPersonalized, cache.Popular, ctx.categories, 0, s.Config.Recommend.CacheSize)
+		items, err := s.CacheClient.SearchScores(ctx.context, cache.NonPersonalized, cache.Popular, categories, 0, s.Config.Recommend.CacheSize)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -1079,7 +1101,7 @@ func (s *RestServer) getRecommend(request *restful.Request, response *restful.Re
 		BadRequest(response, err)
 		return
 	}
-	categories := ReadCategories(request, []string{""})
+	categories := ReadCategories(request, nil)
 	offset, err := ParseInt(request, "offset", 0)
 	if err != nil {
 		BadRequest(response, err)

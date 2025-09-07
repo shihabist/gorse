@@ -78,13 +78,9 @@ func newMockMasterRPC(t *testing.T) *mockMasterRPC {
 		Master: Master{
 			RestServer: server.RestServer{
 				Settings: &config.Settings{
-					Config:                        config.GetDefaultConfig(),
-					CacheClient:                   cache.NoDatabase{},
-					DataClient:                    data.NoDatabase{},
-					CollaborativeFilteringModel:   bpr,
-					ClickModel:                    fm,
-					CollaborativeFilteringModelId: 123,
-					ClickThroughRateModelId:       456,
+					Config:      config.GetDefaultConfig(),
+					CacheClient: cache.NoDatabase{},
+					DataClient:  data.NoDatabase{},
 				},
 			},
 			metaStore:                  metaStore,
