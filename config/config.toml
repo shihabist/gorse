@@ -11,7 +11,7 @@
 #   mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   mongodb+srv://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   sqlite://<path>
-cache_store = "mongodb://nusra_team:etakothinpass_yo@103.163.72.24:27017/gorse?authSource=admin"
+cache_store = "mongodb://nusra_team:etakothinpass_yo@49.213.53.110:27017/gorse?authSource=admin"
 # cache_store = "redis://localhost:6379/0"
 
 # The database for persist data, support MySQL, Postgres, ClickHouse and MongoDB:
@@ -24,7 +24,7 @@ cache_store = "mongodb://nusra_team:etakothinpass_yo@103.163.72.24:27017/gorse?a
 #   mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   mongodb+srv://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
 #   sqlite://<path>
-data_store = "mongodb://nusra_team:etakothinpass_yo@103.163.72.24:27017/gorse?authSource=admin"
+data_store = "mongodb://nusra_team:etakothinpass_yo@49.213.53.110:27017/gorse?authSource=admin"
 
 # The naming prefix for tables (collections, keys) in databases. The default value is empty.
 table_prefix = ""
@@ -123,7 +123,7 @@ active_user_ttl = 0
 [recommend.data_source]
 
 # The feedback types for positive events.
-positive_feedback_types = ["star","like","watch>=3","read>=3"]
+positive_feedback_types = ["star","like","love","watched>50Percent","watch>=3","read>=3"]
 
 # The feedback types for read events.
 read_feedback_types = ["read","watch"]
